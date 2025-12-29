@@ -1,0 +1,42 @@
+name: pages-build-deployment
+on:
+  workflow_call:
+    inputs:
+      token:
+        required: true
+        type: string
+      source:
+        required: false
+        type: string
+        default: '.'
+      destination:
+        required: false
+        type: string
+        default: '_site'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build with Jekyll
+        uses: ghcr.io/actions/jekyll-build-pages@v1.0.13
+        with:
+          source: ${{ inputs.source }}
+          destination: ${{ inputs.destination }}
+          future: false
+          verbose: true
+          token: ${{ inputs.token }}
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ${{ inputs.destination }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: github-pages
+    steps:
+      - uses: actions/download-pages-artifact@v1
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
